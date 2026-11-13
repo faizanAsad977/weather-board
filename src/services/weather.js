@@ -49,12 +49,20 @@ function normalizeOwmForecast(list, unit) {
   return Array.from(byDay.values()).slice(0, 5);
 }
 
+function getOpenWeatherApiKey() {
+  const raw = process.env.REACT_APP_OPENWEATHER_API_KEY;
+  if (!raw) return '';
+  const key = raw.trim();
+  if (!key || key === 'your_openweathermap_key') return '';
+  return key;
+}
+
 async function fetchOpenWeather(city, unit) {
-  const key = process.env.REACT_APP_OPENWEATHER_API_KEY;
+  const key = getOpenWeatherApiKey();
   if (!key) {
-    throw new Error(
-      'OpenWeatherMap API key is missing. Add REACT_APP_OPENWEATHER_API_KEY to .env.local.',
-    );
+    const err = new Error('OPENWEATHER_KEY_MISSING');
+    err.code = 'OPENWEATHER_KEY_MISSING';
+    throw err;
   }
 
   const units = unit === 'imperial' ? 'imperial' : 'metric';
@@ -161,13 +169,32 @@ async function fetchOpenMeteo(city, unit) {
 export async function fetchWeatherForCity(city, unit) {
   let weather;
   let usedFallback = false;
+  let missingOwmKey = false;
 
   try {
     weather = await fetchOpenWeather(city, unit);
   } catch (err) {
-    if (err.code === 'RATE_LIMIT' || err.message === 'RATE_LIMIT') {
+    if (
+      err.code === 'RATE_LIMIT' ||
+      err.message === 'RATE_LIMIT' ||
+      err.code === 'OPENWEATHER_KEY_MISSING'
+    ) {
+      if (err.code === 'OPENWEATHER_KEY_MISSING') {
+        missingOwmKey = true;
+      }
       usedFallback = true;
-      weather = await fetchOpenMeteo(city, unit);
+      try {
+        weather = await fetchOpenMeteo(city, unit);
+      } catch (fallbackErr) {
+        if (missingOwmKey) {
+          const keyErr = new Error(
+            'OpenWeatherMap key is not loaded and Open-Meteo fallback failed. Add REACT_APP_OPENWEATHER_API_KEY to .env.local and restart npm start.',
+          );
+          keyErr.code = 'OPENWEATHER_KEY_MISSING';
+          throw keyErr;
+        }
+        throw fallbackErr;
+      }
     } else {
       throw err;
     }
@@ -176,7 +203,10 @@ export async function fetchWeatherForCity(city, unit) {
   const payload = {
     ...weather,
     city,
-    meta: { usedFallback },
+    meta: {
+      usedFallback,
+      missingOwmKey,
+    },
   };
 
   cacheWeatherInServiceWorker(payload);

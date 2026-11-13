@@ -102,8 +102,19 @@ function App() {
         if (cached) {
           setWeather(cached);
           setFromCache(true);
+          if (err.code === 'OPENWEATHER_KEY_MISSING') {
+            setWeatherError(
+              'OpenWeatherMap key is not loaded. Add REACT_APP_OPENWEATHER_API_KEY to .env.local and restart npm start (stop the server, then run npm start again). Showing saved forecast.',
+            );
+          } else {
+            setWeatherError(
+              `${err.message} Showing the last saved forecast instead.`,
+            );
+          }
+        } else if (err.code === 'OPENWEATHER_KEY_MISSING') {
+          setWeather(null);
           setWeatherError(
-            `${err.message} Showing the last saved forecast instead.`,
+            'OpenWeatherMap key is not loaded. Add REACT_APP_OPENWEATHER_API_KEY to .env.local and restart npm start.',
           );
         } else {
           setWeather(null);

@@ -45,7 +45,9 @@ export function WeatherDisplay({ weather, loading, error, unit, fromCache }) {
       )}
       {meta?.usedFallback && !fromCache && (
         <p className="weather__fallback" role="status">
-          OpenWeatherMap was rate-limited. Showing data from Open-Meteo.
+          {meta?.missingOwmKey
+            ? 'OpenWeatherMap key not loaded in this build — using Open-Meteo. Add the key to .env.local and restart npm start for OpenWeatherMap data.'
+            : 'OpenWeatherMap was rate-limited. Showing data from Open-Meteo.'}
         </p>
       )}
 
