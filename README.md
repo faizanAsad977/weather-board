@@ -14,7 +14,12 @@ _Add your deployment URL after publishing to Vercel or Netlify._
 npm install
 ```
 
-2. Copy `.env.example` to `.env.local` and add API keys:
+2. Create `.env.local` in the project root and add API keys:
+
+```env
+REACT_APP_OPENWEATHER_API_KEY=your_openweathermap_key
+REACT_APP_RAPIDAPI_KEY=your_rapidapi_key_for_geodb
+```
 
 | Variable | Source |
 | --- | --- |
