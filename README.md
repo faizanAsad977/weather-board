@@ -1,70 +1,61 @@
-# Getting Started with Create React App
+# WeatherBoard
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Responsive, installable weather dashboard (PWA) built with Create React App. Search cities with live autocomplete, view current conditions and a 5-day forecast, save favorites, work offline with the last city, and schedule a daily morning reminder.
 
-## Available Scripts
+## Live demo
 
-In the project directory, you can run:
+_Add your deployment URL after publishing to Vercel or Netlify._
 
-### `npm start`
+## Setup
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+1. Clone the repo and install dependencies:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```bash
+npm install
+```
 
-### `npm test`
+2. Copy `.env.example` to `.env.local` and add API keys:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+| Variable | Source |
+| --- | --- |
+| `REACT_APP_OPENWEATHER_API_KEY` | [OpenWeatherMap](https://openweathermap.org/api) (free tier) |
+| `REACT_APP_RAPIDAPI_KEY` | [GeoDB Cities on RapidAPI](https://rapidapi.com/wirefreethought/api/geodb-cities) — subscribe to the **Basic (free)** plan on the **same RapidAPI account** as your key |
 
-### `npm run build`
+3. Start the dev server:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```bash
+npm start
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+4. Production build:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```bash
+npm run build
+```
 
-### `npm run eject`
+Service worker and install prompt work best over **HTTPS** (or `localhost`). Use `npm run build` + a static server, or deploy to Vercel/Netlify.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Architecture
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- **UI:** React single-page app (`src/App.js`) with focused components under `src/components/`.
+- **City search:** GeoDB via RapidAPI, debounced at 300ms (`src/services/geodb.js`).
+- **Weather:** OpenWeatherMap primary; automatic Open-Meteo fallback on rate limit (`src/services/weather.js`).
+- **State:** Favorites, unit, theme, reminder time, and last weather in `localStorage` with graceful degradation (`src/services/storage.js`).
+- **PWA:** `public/manifest.json` + `public/sw.js` caches the app shell and the last weather payload; offline banner when `navigator.onLine` is false.
+- **Notifications:** Explains value before `Notification.requestPermission()`; reminder schedule is sent to the service worker, which shows a daily local notification (see limitations).
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## APIs used
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+- OpenWeatherMap — current weather + 5-day/3h forecast
+- Open-Meteo — fallback forecast (no key)
+- GeoDB Cities (RapidAPI) — autocomplete
 
-## Learn More
+## Known limitations
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- **Push when the tab is closed:** True Web Push with a remote push server is not included (client-only scope). Reminders use the service worker’s `showNotification` on a scheduled timer, which works for installed PWAs but may be paused aggressively on some browsers/OS versions.
+- **Open-Meteo fallback** requires coordinates from a GeoDB suggestion (not free-text submit).
+- **OpenWeather free tier** has request limits; the UI surfaces rate-limit fallback to Open-Meteo.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## IDE
 
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Built with **Cursor**; see `PROMPTS.md` for agent prompt history.
